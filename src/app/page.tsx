@@ -1,10 +1,62 @@
+'use client';
+
 export default function Home() {
+  const exportLogo = (format: 'png' | 'jpeg') => {
+    const svg = document.getElementById('kanna-logo') as unknown as SVGElement;
+    if (!svg) return;
+
+    // Create a canvas
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Set canvas size (higher resolution for better quality)
+    const scale = 8;
+    canvas.width = 350 * scale;
+    canvas.height = 80 * scale;
+
+    // Create an image from SVG
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+
+    const img = new Image();
+    img.onload = () => {
+      // Fill background with transparent or black
+      if (format === 'jpeg') {
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      
+      // Draw the SVG
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      
+      // Convert to blob and download
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        
+        const link = document.createElement('a');
+        link.download = `kanna-logo.${format}`;
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        
+        // Cleanup
+        URL.revokeObjectURL(link.href);
+      }, `image/${format}`, 0.95);
+      
+      URL.revokeObjectURL(url);
+    };
+    
+    img.src = url;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center p-8">
       <div className="text-center">
         {/* KannaCS Logo - Compact Version */}
         <div className="relative mb-4">
           <svg
+            id="kanna-logo"
             width="350"
             height="80"
             viewBox="0 0 350 80"
@@ -89,6 +141,22 @@ export default function Home() {
               Information Systems
             </text>
           </svg>
+        </div>
+        
+        {/* Export Buttons */}
+        <div className="flex justify-center gap-4 mt-6">
+          <button
+            onClick={() => exportLogo('png')}
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-200 shadow-lg"
+          >
+            Export as PNG
+          </button>
+          <button
+            onClick={() => exportLogo('jpeg')}
+            className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors duration-200 shadow-lg"
+          >
+            Export as JPG
+          </button>
         </div>
         
         {/* Decorative elements */}
